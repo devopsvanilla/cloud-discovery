@@ -1,0 +1,32 @@
+kind: source
+spec:
+  name: aws
+  path: cloudquery/aws
+  registry: cloudquery
+  version: "v26.0.0"
+  tables:
+    - aws_s3_buckets
+    - aws_ec2_instances
+    - aws_ec2_security_groups
+    - aws_ec2_vpcs
+    - aws_iam_users
+    - aws_iam_roles
+    - aws_iam_policies
+    - aws_rds_instances
+    - aws_dynamodb_tables
+    - aws_kms_keys
+    - aws_lambda_functions
+    - aws_cloudtrail_trails
+  destinations:
+    - sqlite
+  spec:
+    aws_debug: false
+---
+kind: destination
+spec:
+  name: sqlite
+  path: cloudquery/sqlite
+  registry: cloudquery
+  version: "v3.2.0"
+  spec:
+    connection_string: "/app/reports/cloudquery/inventory.db"

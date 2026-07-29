@@ -1,0 +1,43 @@
+policies:
+  - name: s3-unencrypted-bucket-check
+    resource: aws.s3
+    comment: "Identifica buckets S3 sem criptografia de servidor configurada"
+    filters:
+      - type: bucket-encryption
+        state: false
+    mode:
+      type: pull
+
+  - name: ec2-unattached-ebs-volumes
+    resource: aws.ebs
+    comment: "Identifica volumes EBS desanexados (oportunidade de redução de custo)"
+    filters:
+      - status: available
+    mode:
+      type: pull
+
+  - name: ec2-unassociated-elastic-ips
+    resource: aws.eip
+    comment: "Identifica IPs elásticos não associados a instâncias EC2 (desperdício de custo)"
+    filters:
+      - association_id: null
+    mode:
+      type: pull
+
+  - name: ec2-missing-mandatory-tags
+    resource: aws.ec2
+    comment: "Identifica instâncias EC2 sem as tags obrigatórias Environment ou Owner"
+    filters:
+      - "tag:Environment": absent
+      - "tag:Owner": absent
+    mode:
+      type: pull
+
+  - name: iam-users-without-mfa
+    resource: aws.iam-user
+    comment: "Identifica usuários IAM sem MFA habilitado"
+    filters:
+      - type: mfa
+        mfa_active: false
+    mode:
+      type: pull

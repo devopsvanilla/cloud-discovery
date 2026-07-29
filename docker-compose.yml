@@ -1,0 +1,90 @@
+services:
+  preflight:
+    image: amazon/aws-cli:latest
+    container_name: aws_audit_preflight
+    environment:
+      - AWS_PROFILE=${AWS_PROFILE:-default}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_SDK_LOAD_CONFIG=1
+    volumes:
+      - ${HOME}/.aws:/root/.aws:ro
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+      - ./scripts:/app/scripts:ro
+    entrypoint: ["/bin/bash", "/app/scripts/preflight.sh"]
+
+  prowler:
+    image: ghcr.io/prowler-cloud/prowler:latest
+    container_name: aws_audit_prowler
+    environment:
+      - AWS_PROFILE=${AWS_PROFILE:-default}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_SDK_LOAD_CONFIG=1
+    volumes:
+      - ${HOME}/.aws:/root/.aws:ro
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+      - ./scripts:/app/scripts:ro
+    entrypoint: ["/bin/bash", "/app/scripts/run-prowler.sh"]
+
+  cloudquery:
+    image: cloudquery/cloudquery:latest
+    container_name: aws_audit_cloudquery
+    environment:
+      - AWS_PROFILE=${AWS_PROFILE:-default}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_SDK_LOAD_CONFIG=1
+    volumes:
+      - ${HOME}/.aws:/root/.aws:ro
+      - ./config:/app/config:ro
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+      - ./scripts:/app/scripts:ro
+    entrypoint: ["/bin/sh", "/app/scripts/run-cloudquery.sh"]
+
+  custodian:
+    image: cloudcustodian/c7n:latest
+    container_name: aws_audit_custodian
+    environment:
+      - AWS_PROFILE=${AWS_PROFILE:-default}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_SDK_LOAD_CONFIG=1
+    volumes:
+      - ${HOME}/.aws:/root/.aws:ro
+      - ./policies:/app/policies:ro
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+      - ./scripts:/app/scripts:ro
+    entrypoint: ["/bin/bash", "/app/scripts/run-custodian.sh"]
+
+  steampipe:
+    image: turbot/steampipe:latest
+    container_name: aws_audit_steampipe
+    environment:
+      - AWS_PROFILE=${AWS_PROFILE:-default}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_SDK_LOAD_CONFIG=1
+    volumes:
+      - ${HOME}/.aws:/home/steampipe/.aws:ro
+      - ./config:/app/config:ro
+      - ./queries:/app/queries:ro
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+      - ./scripts:/app/scripts:ro
+    entrypoint: ["/bin/bash", "/app/scripts/run-steampipe.sh"]
+
+  billing-export:
+    image: amazon/aws-cli:latest
+    container_name: aws_audit_billing
+    environment:
+      - AWS_PROFILE=${AWS_PROFILE:-default}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_SDK_LOAD_CONFIG=1
+      - AWS_BILLING_S3_BUCKET=${AWS_BILLING_S3_BUCKET:-my-aws-billing-exports-bucket}
+      - AWS_BILLING_EXPORT_NAME=${AWS_BILLING_EXPORT_NAME:-standard-cur-export}
+    volumes:
+      - ${HOME}/.aws:/root/.aws:ro
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+      - ./scripts:/app/scripts:ro
+    entrypoint: ["/bin/bash", "/app/scripts/run-billing-export.sh"]
