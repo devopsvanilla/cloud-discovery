@@ -18,15 +18,17 @@ spec:
     - aws_lambda_functions
     - aws_cloudtrail_trails
   destinations:
-    - sqlite
+    - file
   spec:
     aws_debug: false
 ---
 kind: destination
 spec:
-  name: sqlite
-  path: cloudquery/sqlite
+  name: file
+  path: cloudquery/file
   registry: cloudquery
-  version: "v3.2.0"
+  version: "v5.5.10"
+  write_mode: "overwrite"
   spec:
-    connection_string: "/app/reports/cloudquery/inventory.db"
+    path: "/app/reports/cloudquery/{{TABLE}}/{{UUID}}.json"
+    format: "json"

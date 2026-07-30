@@ -7,6 +7,12 @@ LOG_FILE="/app/logs/steampipe-${TIMESTAMP}.log"
 
 mkdir -p "${OUTPUT_DIR}" /app/logs
 
+# Copiar credenciais AWS do mount read-only para local gravável no HOME do usuário steampipe
+AWS_DIR="${HOME}/.aws"
+mkdir -p "${AWS_DIR}"
+cp -r /tmp/.aws-host/* "${AWS_DIR}/" 2>/dev/null || true
+cp -r /tmp/.aws-host/.* "${AWS_DIR}/" 2>/dev/null || true
+
 echo "=== [STEAMPIPE] Iniciando execução de consultas SQL e benchmarks ===" | tee -a "${LOG_FILE}"
 echo "Timestamp: ${TIMESTAMP}" | tee -a "${LOG_FILE}"
 

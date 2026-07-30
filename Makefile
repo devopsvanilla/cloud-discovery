@@ -17,35 +17,41 @@ help: ## Exibe a lista de comandos disponíveis
 
 prepare-dirs: ## Cria a estrutura de diretórios necessária para os relatórios
 	@mkdir -p reports/preflight reports/prowler reports/cloudquery reports/cloud-custodian reports/steampipe reports/billing-native reports/billing-focus logs
+	@chmod 777 reports reports/preflight reports/prowler reports/cloudquery reports/cloud-custodian reports/steampipe reports/billing-native reports/billing-focus logs 2>/dev/null || true
 
 preflight: prepare-dirs ## Valida perfil AWS, conectividade STS e permissões
-	docker compose run --rm preflight
+	docker compose run preflight
 
-up: prepare-dirs ## Sobe os serviços em background ou verifica imagens
+up: prepare-dirs ## Valida sintaxe do Docker Compose
 	docker compose config
 
 run-prowler: prepare-dirs ## Executa assessment de segurança com Prowler
-	docker compose run --rm prowler
+	docker compose run prowler
 
 run-cloudquery: prepare-dirs ## Executa coleta de inventário com CloudQuery
-	docker compose run --rm cloudquery
+	docker compose run cloudquery
 
 run-custodian: prepare-dirs ## Executa políticas de governança com Cloud Custodian
-	docker compose run --rm custodian
+	docker compose run custodian
 
 run-steampipe: prepare-dirs ## Executa consultas SQL de compliance com Steampipe
-	docker compose run --rm steampipe
+	docker compose run steampipe
 
 run-billing-export: prepare-dirs ## Executa verificação e gerenciamento de AWS Data Exports (Nativo)
-	docker compose run --rm billing-export
+	docker compose run billing-export
 
 run-all: prepare-dirs preflight ## Executa a suíte completa de auditoria em ordem sequencial
 	@echo "🚀 Executando suíte completa de auditoria..."
-	docker compose run --rm prowler
-	docker compose run --rm cloudquery
-	docker compose run --rm custodian
-	docker compose run --rm steampipe
-	docker compose run --rm billing-export
+	@echo "👉 [1/5] Prowler..."
+	-docker compose run prowler
+	@echo "👉 [2/5] CloudQuery..."
+	-docker compose run cloudquery
+	@echo "👉 [3/5] Cloud Custodian..."
+	-docker compose run custodian
+	@echo "👉 [4/5] Steampipe..."
+	-docker compose run steampipe
+	@echo "👉 [5/5] Billing Export..."
+	-docker compose run billing-export
 	@echo "✅ Varredura completa finalizada! Verifique a pasta reports/"
 
 down: ## Remove containers e redes residuais
@@ -53,6 +59,6 @@ down: ## Remove containers e redes residuais
 
 clean: ## Limpa relatórios e logs antigos
 	@echo "🧹 Limpando relatórios e logs..."
-	rm -rf reports/* logs/*
+	docker run --rm -v ./reports:/data -v ./logs:/logs alpine sh -c 'rm -rf /data/* /logs/*' 2>/dev/null || rm -rf reports/* logs/*
 	@make prepare-dirs
 	@echo "✅ Diretórios limpos."

@@ -5,24 +5,20 @@ policies:
     filters:
       - type: bucket-encryption
         state: false
-    mode:
-      type: pull
 
   - name: ec2-unattached-ebs-volumes
     resource: aws.ebs
     comment: "Identifica volumes EBS desanexados (oportunidade de redução de custo)"
     filters:
-      - status: available
-    mode:
-      type: pull
+      - Attachments: absent
 
   - name: ec2-unassociated-elastic-ips
-    resource: aws.eip
+    resource: aws.network-addr
     comment: "Identifica IPs elásticos não associados a instâncias EC2 (desperdício de custo)"
     filters:
-      - association_id: null
-    mode:
-      type: pull
+      - type: value
+        key: AssociationId
+        value: absent
 
   - name: ec2-missing-mandatory-tags
     resource: aws.ec2
@@ -30,14 +26,11 @@ policies:
     filters:
       - "tag:Environment": absent
       - "tag:Owner": absent
-    mode:
-      type: pull
 
   - name: iam-users-without-mfa
     resource: aws.iam-user
     comment: "Identifica usuários IAM sem MFA habilitado"
     filters:
-      - type: mfa
-        mfa_active: false
-    mode:
-      type: pull
+      - type: credential
+        key: mfa_active
+        value: false
