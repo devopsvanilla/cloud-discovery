@@ -1,3 +1,5 @@
+![DevOpsVanilla](./images/devopsvanilla-banner.png)
+
 # AWS Account Audit Stack (Docker Compose)
 
 Solução local, automatizada e segura baseada em **Docker Compose** para auditoria completa de contas AWS. O projeto realiza assessment de segurança, inventário de ativos, aplicação de políticas de governança, auditoria SQL de compliance e exportação de dados de bilhetagem (**AWS Data Exports / Standard CUR**).
@@ -19,6 +21,7 @@ graph TD
     Compose --> Custodian["custodian (Cloud Custodian)"]
     Compose --> Steampipe["steampipe (Turbot Steampipe)"]
     Compose --> Billing["billing-export (AWS CLI)"]
+    Compose --> BillingCE["billing-ce (AWS CLI Cost Explorer)"]
 
     Preflight --> R_Pre["reports/preflight/"]
     Prowler --> R_Pro["reports/prowler/"]
@@ -27,6 +30,7 @@ graph TD
     Steampipe --> R_Ste["reports/steampipe/"]
     Billing --> R_BilN["reports/billing-native/"]
     Billing --> R_BilF["reports/billing-focus/ (Status: Cancelado)"]
+    BillingCE --> R_BilCE["reports/billing-cost-explorer/"]
 ```
 
 ---
@@ -37,13 +41,14 @@ Todos os relatórios são salvos em formato legível por máquina (JSON, CSV, SQ
 
 ```text
 reports/
-  preflight/        # Validação de credenciais e identidade da conta AWS
-  prowler/          # Assessment de segurança, postura e compliance (JSON, CSV, HTML)
-  cloudquery/       # Inventário relacional da conta em SQLite (inventory.db)
-  cloud-custodian/  # Relatórios de governança e otimização de custo (CSV, JSON)
-  steampipe/        # Resultados de consultas SQL de compliance (CSV, JSON)
-  billing-native/   # Metadados e status do AWS Data Exports (Standard CUR)
-  billing-focus/    # Registro de status do padrão FOCUS (Desabilitado a pedido)
+  preflight/             # Validação de credenciais e identidade da conta AWS
+  prowler/               # Assessment de segurança, postura e compliance (JSON, CSV, HTML)
+  cloudquery/            # Inventário relacional da conta em SQLite (inventory.db)
+  cloud-custodian/       # Relatórios de governança e otimização de custo (CSV, JSON)
+  steampipe/             # Resultados de consultas SQL de compliance (CSV, JSON)
+  billing-native/        # Metadados e status do AWS Data Exports (Standard CUR)
+  billing-focus/         # Registro de status do padrão FOCUS (Desabilitado a pedido)
+  billing-cost-explorer/ # Extração de faturamento do último trimestre via AWS Cost Explorer API (JSON, TXT)
 ```
 
 ---
@@ -52,7 +57,7 @@ reports/
 
 1. **Docker** e **Docker Compose** instalados e em execução.
 2. **AWS CLI** instalado no host com perfis configurados em `~/.aws/credentials` e `~/.aws/config`.
-3. Permissões de leitura na conta AWS (ex.: `ReadOnlyAccess` + `bcm-data-exports:ListExports`).
+3. Permissões de leitura na conta AWS (ex.: `ReadOnlyAccess` + `bcm-data-exports:ListExports` + `ce:GetCostAndUsage`).
 
 ---
 
@@ -94,6 +99,7 @@ reports/
 | `make run-custodian` | Aplica políticas de governança e otimização com Cloud Custodian |
 | `make run-steampipe` | Executa consultas SQL de compliance com Steampipe |
 | `make run-billing-export` | Verifica e gerencia o AWS Data Exports nativo |
+| `make run-billing-ce` | Extrai histórico de faturamento dos últimos 90 dias via AWS Cost Explorer |
 | `make run-all` | **Executa a suíte completa de auditoria sequencialmente** |
 | `make down` | Limpa containers e redes residuais |
 | `make clean` | Apaga relatórios e logs antigos |
@@ -120,6 +126,10 @@ Executa a suíte de consultas SQL declaradas em `queries/steampipe-audit.sql` ut
 ### 6. Billing Data Exports (`scripts/run-billing-export.sh`)
 Interage com a API `bcm-data-exports` (ou fallback `cur`) para registrar o status das exportações ativas da conta em `reports/billing-native/`.
 *Nota*: A exportação FOCUS 1.0 foi cancelada conforme diretriz de projeto, com o evento registrado formalmente em `reports/billing-focus/`.
+
+### 7. Billing Cost Explorer (`scripts/run-billing-ce.sh`)
+Executa consultas na API `aws ce get-cost-and-usage` para extrair a série temporal de custos do **último trimestre (últimos 90 dias / 3 meses)**. Salva relatórios detalhados agrupados por Serviço, Tipo de Uso (UsageType), Região e Tendência Diária em `reports/billing-cost-explorer/`.
+
 
 ---
 

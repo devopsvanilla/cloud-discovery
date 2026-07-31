@@ -1,3 +1,5 @@
+![DevOpsVanilla](../images/devopsvanilla-banner.png)
+
 # Guia de Operação: Consolidação de Relatórios de Auditoria por IA
 
 Este documento descreve as instruções e estruturas exigidas para que um modelo de IA (LLM / Agentic AI) leia, cruze e consolide os relatórios gerados por esta stack de auditoria AWS.

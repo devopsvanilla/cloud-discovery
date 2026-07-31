@@ -9,6 +9,10 @@ spec:
     - aws_ec2_instances
     - aws_ec2_security_groups
     - aws_ec2_vpcs
+    - aws_elbv2_load_balancers
+    - aws_elbv2_target_groups
+    - aws_cloudfront_distributions
+    - aws_route53_zones
     - aws_iam_users
     - aws_iam_roles
     - aws_iam_policies
